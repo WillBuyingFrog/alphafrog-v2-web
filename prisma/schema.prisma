@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model domestic_fundholdings {
+  id              BigInt @id @default(autoincrement())
+  ts_code         String @db.VarChar(20)
+  ann_date        String @db.VarChar(20)
+  end_date        String @db.VarChar(20)
+  symbol          String @db.VarChar(20)
+  mkv             Float
+  amount          Float
+  stk_mkv_ratio   Float
+  stk_float_ratio Float
+
+  @@unique([ts_code, ann_date, symbol], map: "unique_fund_holdings")
+}
+
+model domestic_fundinfo {
+  ts_code        String    @id @db.VarChar(20)
+  name           String    @db.VarChar(50)
+  management     String    @db.VarChar(100)
+  custodian      String    @db.VarChar(100)
+  fund_type      String    @db.VarChar(50)
+  found_date     DateTime? @db.Date
+  due_date       DateTime? @db.Date
+  list_date      DateTime? @db.Date
+  issue_date     DateTime? @db.Date
+  delist_date    DateTime? @db.Date
+  issue_amount   Float?
+  m_fee          Float?
+  c_fee          Float?
+  duration_year  Float?
+  p_value        Float?
+  min_amount     Float?
+  exp_return     Float?
+  benchmark      String?   @db.VarChar(500)
+  status         String?   @db.VarChar(50)
+  invest_type    String?   @db.VarChar(50)
+  type           String?   @db.VarChar(50)
+  trustee        String?   @db.VarChar(100)
+  purc_startdate DateTime? @db.Date
+  redm_startdate DateTime? @db.Date
+  market         String    @db.VarChar(50)
+
+  @@index([ts_code], map: "domestic_fundinfo_ts_code_7d6cdbd8_like")
+}
+
+model domestic_fundmanager {
+  id          BigInt   @id @default(autoincrement())
+  ts_code     String   @db.VarChar(20)
+  ann_date    DateTime @db.Date
+  name        String   @db.VarChar(50)
+  gender      String   @db.VarChar(10)
+  birth_year  String   @db.VarChar(4)
+  edu         String   @db.VarChar(20)
+  nationality String   @db.VarChar(20)
+  begin_date  DateTime @db.Date
+  end_date    DateTime @db.Date
+  resume      String   @db.VarChar(1000)
+}
+
+model domestic_fundnav {
+  id             BigInt    @id @default(autoincrement())
+  ts_code        String    @db.VarChar(20)
+  ann_date       DateTime? @db.Date
+  nav_date       DateTime? @db.Date
+  unit_nav       Float?
+  accum_nav      Float?
+  accum_div      Float?
+  net_asset      Float?
+  total_netasset Float?
+  adj_nav        Float?
+  update_flag    String    @db.VarChar(10)
+
+  @@unique([ts_code, nav_date], map: "unique_fund_nav")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model domestic_indexcomponentweight {
+  id                                         BigInt                                       @id @default(autoincrement())
+  index_code                                 String                                       @db.VarChar(20)
+  con_code_id                                String                                       @db.VarChar(20)
+  trade_date                                 DateTime                                     @db.Date
+  weight                                     Float
+  con_name                                   String                                       @db.VarChar
+  domestic_stockinfo                         domestic_stockinfo                           @relation(fields: [con_code_id], references: [ts_code], onDelete: NoAction, onUpdate: NoAction, map: "domestic_indexcompon_con_code_id_2346e84e_fk_domestic_")
+  domestic_stockinfo_index_component_weights domestic_stockinfo_index_component_weights[]
+
+  @@unique([index_code, con_code_id, trade_date], map: "domestic_indexcomponentw_index_code_con_code_trad_dd66e8a1_uniq")
+  @@index([con_code_id], map: "domestic_indexcomponentweight_con_code_id_2346e84e")
+  @@index([con_code_id], map: "domestic_indexcomponentweight_con_code_id_2346e84e_like")
+}
+
+model domestic_indexdaily {
+  id         BigInt   @id @default(autoincrement())
+  ts_code    String   @db.VarChar(20)
+  trade_date DateTime @db.Date
+  close      Float
+  open       Float
+  high       Float
+  low        Float
+  pre_close  Float?
+  change     Float?
+  pct_chg    Float?
+  vol        Float?
+  amount     Float?
+
+  @@unique([ts_code, trade_date], map: "domestic_indexdaily_ts_code_trade_date_2f0eb270_uniq")
+}
+
+model domestic_indexinfo {
+  ts_code     String    @id @db.VarChar(20)
+  name        String    @db.VarChar(50)
+  fullname    String    @db.VarChar(100)
+  market      String    @db.VarChar(20)
+  publisher   String    @db.VarChar(50)
+  index_type  String?   @db.VarChar(20)
+  category    String?   @db.VarChar(20)
+  base_date   DateTime? @db.Date
+  base_point  Float?
+  list_date   DateTime? @db.Date
+  weight_rule String?   @db.VarChar(200)
+  desc        String?
+  exp_date    DateTime? @db.Date
+
+  @@index([ts_code], map: "domestic_indexinfo_ts_code_dc325b5c_like")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model domestic_stockdaily {
+  id                 BigInt             @id @default(autoincrement())
+  trade_date         DateTime           @db.Date
+  open               Float
+  high               Float
+  low                Float
+  close              Float
+  pre_close          Float
+  change             Float
+  pct_chg            Float
+  vol                Float
+  amount             Float
+  ts_code_id         String             @db.VarChar(20)
+  domestic_stockinfo domestic_stockinfo @relation(fields: [ts_code_id], references: [ts_code], onDelete: NoAction, onUpdate: NoAction, map: "domestic_stockdaily_ts_code_id_fedde271_fk_domestic_")
+
+  @@unique([ts_code_id, trade_date], map: "domestic_stockdaily_ts_code_id_trade_date_0d7d6b89_uniq")
+  @@index([ts_code_id], map: "domestic_stockdaily_ts_code_id_fedde271")
+  @@index([ts_code_id], map: "domestic_stockdaily_ts_code_id_fedde271_like")
+}
+
+model domestic_stockinfo {
+  ts_code                                    String                                       @id @db.VarChar(20)
+  symbol                                     String                                       @db.VarChar(10)
+  name                                       String                                       @db.VarChar(50)
+  area                                       String?                                      @db.VarChar(50)
+  industry                                   String?                                      @db.VarChar(50)
+  fullname                                   String?                                      @db.VarChar(100)
+  enname                                     String?                                      @db.VarChar(100)
+  cnspell                                    String                                       @db.VarChar(20)
+  market                                     String                                       @db.VarChar(10)
+  exchange                                   String                                       @db.VarChar(10)
+  curr_type                                  String                                       @db.VarChar(10)
+  list_status                                String                                       @db.VarChar(1)
+  list_date                                  DateTime                                     @db.Date
+  delist_date                                DateTime?                                    @db.Date
+  is_hs                                      String?                                      @db.VarChar(1)
+  act_name                                   String?                                      @db.VarChar(100)
+  act_ent_type                               String?                                      @db.VarChar(50)
+  domestic_indexcomponentweight              domestic_indexcomponentweight[]
+  domestic_stockdaily                        domestic_stockdaily[]
+  domestic_stockinfo_index_component_weights domestic_stockinfo_index_component_weights[]
+
+  @@index([ts_code], map: "domestic_stockinfo_ts_code_ff36a6cd_like")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model domestic_stockinfo_index_component_weights {
+  id                            BigInt                        @id @default(autoincrement())
+  stockinfo_id                  String                        @db.VarChar(20)
+  indexcomponentweight_id       BigInt
+  domestic_indexcomponentweight domestic_indexcomponentweight @relation(fields: [indexcomponentweight_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "domestic_stockinfo_i_indexcomponentweight_8d11a5ed_fk_domestic_")
+  domestic_stockinfo            domestic_stockinfo            @relation(fields: [stockinfo_id], references: [ts_code], onDelete: NoAction, onUpdate: NoAction, map: "domestic_stockinfo_i_stockinfo_id_5e53636a_fk_domestic_")
+
+  @@unique([stockinfo_id, indexcomponentweight_id], map: "domestic_stockinfo_index_stockinfo_id_indexcompon_000097ba_uniq")
+  @@index([indexcomponentweight_id], map: "domestic_stockinfo_index_c_indexcomponentweight_id_8d11a5ed")
+  @@index([stockinfo_id], map: "domestic_stockinfo_index_c_stockinfo_id_5e53636a")
+  @@index([stockinfo_id], map: "domestic_stockinfo_index_stockinfo_id_5e53636a_like")
+}
